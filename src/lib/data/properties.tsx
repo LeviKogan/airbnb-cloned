@@ -1,4 +1,6 @@
 import { Property } from "@/lib/types/property";
+import phillipIslandHouse1 from "@/lib/data/images/properties/phillip-island-house-1.jpg";
+import stkildaApartment1 from "@/lib/data/images/properties/stkilda-apartment-1.jpg";
 
 export const properties: Property[] = [
   {
@@ -9,10 +11,9 @@ export const properties: Property[] = [
     tagline: "A warm country escape for couples and slow weekends.",
     description:
       "A cosy, beautifully styled house with a beautiful garden, charming interiors, and a peaceful atmosphere for a relaxed getaway.",
-    heroImage: "/images/properties/phillip-island-house-1.jpg",
+    heroImage: phillipIslandHouse1,
     images: [
-      "/images/properties/phillip-island-house-1.jpg",
-      "/images/properties/phillip-island-house-1.jpg",
+      phillipIslandHouse1,
     ],
     bedrooms: 3,
     bathrooms: 2,
@@ -28,10 +29,9 @@ export const properties: Property[] = [
     tagline: "A stylish city retreat with modern amenities.",
     description:
       "A calm and elegant retreat near the coast, ideal for a weekend away with beautiful natural light and relaxing outdoor spaces.",
-    heroImage: "/images/properties/stkilda-apartment-1.jpg",
+    heroImage: stkildaApartment1,
     images: [
-      "/images/properties/stkilda-apartment-1.jpg",
-      "/images/properties/stkilda-apartment-1.jpg",
+      stkildaApartment1,
     ],
     bedrooms: 1,
     bathrooms: 1,
