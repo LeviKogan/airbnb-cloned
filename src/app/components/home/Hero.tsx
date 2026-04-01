@@ -2,7 +2,7 @@ import Container from "@/components/layout/Container";
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden bg-[linear-gradient(to_bottom,rgba(0,0,0,0.25),rgba(0,0,0,0.45)),url('/images/properties/wilson-cottage-1.jpg')] bg-cover bg-center text-white">
+    <section className="relative overflow-hidden bg-[linear-gradient(to_bottom,rgba(0,0,0,0.25),rgba(0,0,0,0.45)),url('/vercel.svg')] bg-cover bg-center text-white">
       <Container className="flex min-h-[72vh] items-center py-20">
         <div className="max-w-3xl">
           <p className="mb-4 text-sm uppercase tracking-[0.2em] text-white/80">
