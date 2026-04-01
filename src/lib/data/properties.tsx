@@ -12,7 +12,7 @@ export const properties: Property[] = [
     heroImage: "/images/properties/phillip-island-house-1.jpg",
     images: [
       "/images/properties/phillip-island-house-1.jpg",
-      "/images/properties/phillip-island-house-2.jpg",
+      "/images/properties/phillip-island-house-1.jpg",
     ],
     bedrooms: 3,
     bathrooms: 2,
@@ -31,7 +31,7 @@ export const properties: Property[] = [
     heroImage: "/images/properties/stkilda-apartment-1.jpg",
     images: [
       "/images/properties/stkilda-apartment-1.jpg",
-      "/images/properties/stkilda-apartment-2.jpg",
+      "/images/properties/stkilda-apartment-1.jpg",
     ],
     bedrooms: 1,
     bathrooms: 1,
