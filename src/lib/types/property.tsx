@@ -9,6 +9,7 @@ export type Property = {
     description: string;
     heroImage: StaticImageData;
     images: StaticImageData[];
+    amenities: string[];
     bedrooms: number;
     bathrooms: number;
     guests: number;

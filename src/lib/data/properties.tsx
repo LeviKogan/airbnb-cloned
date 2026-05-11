@@ -15,6 +15,14 @@ export const properties: Property[] = [
     images: [
       phillipIslandHouse1,
     ],
+    amenities: [
+      "Wi-Fi",
+      "Full kitchen",
+      "Private garden",
+      "Free parking",
+      "Washer",
+      "Dedicated workspace",
+    ],
     bedrooms: 3,
     bathrooms: 2,
     guests: 9,
@@ -33,6 +41,14 @@ export const properties: Property[] = [
     images: [
       stkildaApartment1,
     ],
+    amenities: [
+      "Wi-Fi",
+      "Air conditioning",
+      "Balcony",
+      "Coffee machine",
+      "Smart TV",
+      "Self check-in",
+    ],
     bedrooms: 1,
     bathrooms: 1,
     guests: 2,
@@ -40,3 +56,7 @@ export const properties: Property[] = [
     featured: true,
   },
 ];
+
+export function getPropertyBySlug(slug: string) {
+  return properties.find((property) => property.slug === slug);
+}
