@@ -1,10 +1,11 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import Container from "@/components/layout/Container";
+import PropertyBookingSection from "@/components/properties/PropertyBookingSection";
 import { getPropertyBySlug, properties } from "@/lib/data/properties";
 
 type PropertyPageProps = {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 };
 
 export function generateStaticParams() {
@@ -13,8 +14,8 @@ export function generateStaticParams() {
   }));
 }
 
-export default function PropertyPage({ params }: PropertyPageProps) {
-  const { slug } = params;
+export default async function PropertyPage({ params }: PropertyPageProps) {
+  const { slug } = await params;
   const property = getPropertyBySlug(slug);
 
   if (!property) {
@@ -96,22 +97,7 @@ export default function PropertyPage({ params }: PropertyPageProps) {
           </div>
 
           <aside className="lg:sticky lg:top-8 lg:self-start">
-            <div className="rounded-3xl border border-neutral-200 p-6 shadow-sm">
-              <p className="text-sm text-neutral-500">From</p>
-              <p className="mt-1 text-3xl font-semibold text-neutral-950">
-                ${property.pricePerNight}
-                <span className="ml-1 text-base font-normal text-neutral-500">/ night</span>
-              </p>
-              <p className="mt-6 rounded-xl bg-neutral-100 px-4 py-3 text-sm text-neutral-700">
-                Booking sidebar placeholder: calendar and checkout flow will be added in the next stage.
-              </p>
-              <button
-                type="button"
-                className="mt-4 w-full rounded-full bg-black px-5 py-3 text-sm font-medium text-white opacity-70"
-              >
-                Reserve (coming soon)
-              </button>
-            </div>
+            <PropertyBookingSection property={property} />
           </aside>
         </Container>
       </section>
