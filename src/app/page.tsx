@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Hero from "@/components/home/Hero";
 import PropertyGrid from "@/components/home/PropertyGrid";
 import Container from "@/components/layout/Container";
@@ -26,13 +27,22 @@ export default function HomePage() {
                 comfort, simplicity, and memorable short stays.
               </p>
               <p className="leading-7">
-                This website will let guests browse properties, view photos, check
-                availability, and make bookings directly without relying on third-party
-                marketplaces.
+                Guests can browse properties, view photos, pick dates with availability checks,
+                and submit booking requests directly—without relying on third-party marketplaces.
               </p>
               <p className="leading-7">
-                The next stage will add live calendars, booking rules, confirmations,
-                and an owner dashboard for managing availability.
+                Coming next: payment capture, email confirmations, and an owner dashboard for
+                managing availability at scale.
+              </p>
+              <p className="leading-7">
+                <Link href="/about" className="font-medium text-neutral-950 underline">
+                  Read more about how we host
+                </Link>{" "}
+                or{" "}
+                <Link href="/contact" className="font-medium text-neutral-950 underline">
+                  get in touch
+                </Link>
+                .
               </p>
             </div>
           </div>

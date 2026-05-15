@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Container from "@/components/layout/Container";
 
 export default function Hero() {
@@ -17,18 +18,18 @@ export default function Hero() {
           </p>
 
           <div className="mt-8 flex flex-wrap gap-4">
-            <a
-              href="#properties"
+            <Link
+              href="/properties"
               className="rounded-full bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90"
             >
               View properties
-            </a>
-            <a
-              href="#about"
+            </Link>
+            <Link
+              href="/about"
               className="rounded-full border border-white/40 px-6 py-3 text-sm font-medium text-white transition hover:bg-white/10"
             >
               Learn more
-            </a>
+            </Link>
           </div>
         </div>
       </Container>

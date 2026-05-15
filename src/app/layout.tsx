@@ -4,7 +4,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
-  title: "Stay Victoria",
+  title: { default: "Stay Victoria", template: "%s | Stay Victoria" },
   description: "Boutique direct-booking stays in Victoria.",
 };
 
