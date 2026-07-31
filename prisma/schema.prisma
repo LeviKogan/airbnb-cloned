@@ -21,3 +21,31 @@ model Booking {
 
   @@index([propertyId])
 }
+
+model PropertyOverride {
+  id            String   @id @default(cuid())
+  propertyId    String   @unique
+  name          String
+  location      String
+  tagline       String
+  description   String
+  amenitiesJson String
+  bedrooms      Int
+  bathrooms     Int
+  guests        Int
+  pricePerNight Int
+  featured      Boolean  @default(true)
+  updatedAt     DateTime @updatedAt
+}
+
+model BlockedDateRange {
+  id         String   @id @default(cuid())
+  propertyId String
+  checkIn    String
+  checkOut   String
+  note       String?
+  createdAt  DateTime @default(now())
+
+  @@index([propertyId])
+  @@index([propertyId, checkIn, checkOut])
+}
