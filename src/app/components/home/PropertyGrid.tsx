@@ -1,9 +1,11 @@
 import Container from "@/components/layout/Container";
 import SectionHeading from "@/components/ui/SectionHeading";
 import PropertyCard from "@/components/home/PropertyCard";
-import { properties } from "@/lib/data/properties";
+import { getManagedProperties } from "@/lib/server/properties";
 
-export default function PropertyGrid() {
+export default async function PropertyGrid() {
+  const properties = await getManagedProperties();
+
   return (
     <section id="properties" className="bg-white py-20 sm:py-24">
       <Container>

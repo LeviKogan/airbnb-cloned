@@ -2,9 +2,9 @@
 
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
-import { properties } from "@/lib/data/properties";
-import { mockOccupiedRangesByPropertyId } from "@/lib/data/availability";
 import { getNights, isValidDateOrder, rangeOverlapsAny } from "@/lib/domain/dateRange";
+import { getManagedPropertyById } from "@/lib/server/properties";
+import { getOccupiedRangesForProperty } from "@/lib/server/occupancy";
 
 const bookingSchema = z.object({
   propertyId: z.string().min(1),
@@ -34,7 +34,7 @@ export async function createBooking(input: unknown): Promise<CreateBookingResult
   }
 
   const data = parsed.data;
-  const property = properties.find((p) => p.id === data.propertyId);
+  const property = await getManagedPropertyById(data.propertyId);
   if (!property) {
     return { ok: false, error: "This listing is not available." };
   }
@@ -53,23 +53,32 @@ export async function createBooking(input: unknown): Promise<CreateBookingResult
     return { ok: false, error: "Please select at least one night." };
   }
 
-  const mockBlocks = mockOccupiedRangesByPropertyId[data.propertyId] ?? [];
-  if (rangeOverlapsAny(range, mockBlocks)) {
+  const occupiedRanges = await getOccupiedRangesForProperty(data.propertyId);
+  if (rangeOverlapsAny(range, occupiedRanges)) {
     return { ok: false, error: "Those dates overlap an unavailable period." };
   }
 
   try {
     const booking = await prisma.$transaction(async (tx) => {
-      const conflict = await tx.booking.findFirst({
-        where: {
-          propertyId: data.propertyId,
-          status: { in: ["pending", "confirmed"] },
-          checkIn: { lt: data.checkOut },
-          checkOut: { gt: data.checkIn },
-        },
-      });
+      const [bookingConflict, blockedConflict] = await Promise.all([
+        tx.booking.findFirst({
+          where: {
+            propertyId: data.propertyId,
+            status: { in: ["pending", "confirmed"] },
+            checkIn: { lt: data.checkOut },
+            checkOut: { gt: data.checkIn },
+          },
+        }),
+        tx.blockedDateRange.findFirst({
+          where: {
+            propertyId: data.propertyId,
+            checkIn: { lt: data.checkOut },
+            checkOut: { gt: data.checkIn },
+          },
+        }),
+      ]);
 
-      if (conflict) {
+      if (bookingConflict || blockedConflict) {
         return null;
       }
 

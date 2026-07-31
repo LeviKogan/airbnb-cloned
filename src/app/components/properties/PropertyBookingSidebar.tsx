@@ -20,6 +20,18 @@ function formatLocalYmd(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+function formatUnavailableRange(range: DateRangeIso): string {
+  const formatter = new Intl.DateTimeFormat("en-AU", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+  return `${formatter.format(new Date(`${range.checkIn}T00:00:00Z`))} – ${formatter.format(
+    new Date(`${range.checkOut}T00:00:00Z`),
+  )}`;
+}
+
 export default function PropertyBookingSidebar({
   propertyId,
   propertyName,
@@ -56,6 +68,10 @@ export default function PropertyBookingSidebar({
     guestEmail.trim().length > 0 &&
     agreedToHouseRules &&
     !isPending;
+  const upcomingUnavailable = occupiedRanges
+    .filter((occupied) => occupied.checkOut >= todayYmd)
+    .sort((a, b) => a.checkIn.localeCompare(b.checkIn))
+    .slice(0, 4);
 
   const rangeHint = (() => {
     if (!range || !rangeValid) {
@@ -139,6 +155,22 @@ export default function PropertyBookingSidebar({
       </p>
 
       <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+        <div className="rounded-2xl bg-amber-50 px-4 py-3.5">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-medium text-amber-950">Unavailable dates</p>
+            <span className="size-2.5 rounded-full bg-amber-400" aria-hidden />
+          </div>
+          {upcomingUnavailable.length ? (
+            <ul className="mt-2 space-y-1 text-xs leading-5 text-amber-800">
+              {upcomingUnavailable.map((occupied) => (
+                <li key={`${occupied.checkIn}-${occupied.checkOut}`}>{formatUnavailableRange(occupied)}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-1 text-xs text-amber-800">The calendar is currently open.</p>
+          )}
+        </div>
+
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block text-sm text-neutral-700">
             Check-in

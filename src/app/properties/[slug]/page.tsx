@@ -2,7 +2,8 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import Container from "@/components/layout/Container";
 import PropertyBookingSection from "@/components/properties/PropertyBookingSection";
-import { getPropertyBySlug, properties } from "@/lib/data/properties";
+import { properties } from "@/lib/data/properties";
+import { getManagedPropertyBySlug } from "@/lib/server/properties";
 
 type PropertyPageProps = {
   params: Promise<{ slug: string }>;
@@ -16,7 +17,7 @@ export function generateStaticParams() {
 
 export default async function PropertyPage({ params }: PropertyPageProps) {
   const { slug } = await params;
-  const property = getPropertyBySlug(slug);
+  const property = await getManagedPropertyBySlug(slug);
 
   if (!property) {
     notFound();

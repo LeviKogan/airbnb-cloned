@@ -2,7 +2,7 @@
 
 ## Overview
 
-Listings and marketing content are **static** TypeScript modules under `src/lib/data/`. **Availability** merges mock blocked ranges with **SQLite** bookings via Prisma. Guests submit **booking requests** through a **Server Action** that validates with Zod and writes inside a Prisma transaction.
+Listing image assets and stable slugs live in **static** TypeScript modules under `src/lib/data/`; admin edits are persisted as `PropertyOverride` rows and merged on read. **Availability** merges active SQLite bookings with admin-managed `BlockedDateRange` rows via Prisma. Guests submit **booking requests** through a **Server Action** that validates with Zod and writes inside a Prisma transaction.
 
 ## Request path: booking request
 
@@ -31,17 +31,21 @@ flowchart TB
   subgraph ssr [Server]
     Page[property_slug_page]
     Occ[getOccupiedRangesForProperty]
-    Mock[mockOccupiedRangesByPropertyId]
     Db[prisma.booking.findMany]
+    Blocks[prisma.blockedDateRange.findMany]
   end
   Page --> Occ
-  Occ --> Mock
   Occ --> Db
+  Occ --> Blocks
   Page --> SidebarProps[PropertyBookingSection_props]
   SidebarProps --> Client[PropertyBookingSidebar_client]
 ```
 
-If the database query throws (for example, missing `DATABASE_URL` or corrupt file), `getOccupiedRangesForProperty` falls back to **mock ranges only** so listing pages keep rendering.
+If the database query throws (for example, missing `DATABASE_URL` or corrupt file), listing pages keep rendering with an empty availability set and booking submissions return a friendly service error.
+
+## Admin workspace
+
+The `/admin` route contains a responsive overview, listing editor, and per-property calendar. Mutations use Server Actions with Zod validation and call `revalidatePath` for both admin and guest routes. Blocking and booking creation repeat overlap checks inside Prisma transactions so an admin block cannot silently conflict with a guest reservation.
 
 ## Folder conventions
 

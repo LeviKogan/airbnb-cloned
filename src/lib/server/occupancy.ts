@@ -1,4 +1,3 @@
-import { mockOccupiedRangesByPropertyId } from "@/lib/data/availability";
 import type { DateRangeIso } from "@/lib/types/booking";
 import { prisma } from "@/lib/db/prisma";
 
@@ -7,22 +6,26 @@ function activeDbStatuses(): string[] {
 }
 
 export async function getOccupiedRangesForProperty(propertyId: string): Promise<DateRangeIso[]> {
-  const mock = mockOccupiedRangesByPropertyId[propertyId] ?? [];
-
   try {
-    const rows = await prisma.booking.findMany({
-      where: {
-        propertyId,
-        status: { in: activeDbStatuses() },
-      },
-      select: { checkIn: true, checkOut: true },
-    });
-    const fromDb: DateRangeIso[] = rows.map((row) => ({
+    const [bookings, blocks] = await Promise.all([
+      prisma.booking.findMany({
+        where: {
+          propertyId,
+          status: { in: activeDbStatuses() },
+        },
+        select: { checkIn: true, checkOut: true },
+      }),
+      prisma.blockedDateRange.findMany({
+        where: { propertyId },
+        select: { checkIn: true, checkOut: true },
+      }),
+    ]);
+    const fromBookings: DateRangeIso[] = bookings.map((row) => ({
       checkIn: row.checkIn,
       checkOut: row.checkOut,
     }));
-    return [...mock, ...fromDb];
+    return [...fromBookings, ...blocks];
   } catch {
-    return mock;
+    return [];
   }
 }
