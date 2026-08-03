@@ -3,7 +3,9 @@ export type DateRangeIso = {
   checkOut: string;
 };
 
-export type BookingStatus = "pending" | "confirmed" | "cancelled";
+export type BookingStatus = "pending" | "awaiting_payment" | "confirmed" | "cancelled";
+
+export type PaymentStatus = "not_requested" | "pending" | "paid" | "failed";
 
 export type CreateBookingInput = {
   propertyId: string;

@@ -4,7 +4,14 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { properties } from "@/lib/data/properties";
-import { isValidDateOrder } from "@/lib/domain/dateRange";
+import { getNights, isValidDateOrder } from "@/lib/domain/dateRange";
+import { isCurrentUserAdmin } from "@/lib/server/authorization";
+import { getManagedPropertyById } from "@/lib/server/properties";
+import {
+  createBookingCheckoutSession,
+  IntegrationConfigurationError,
+  sendPaymentRequestEmail,
+} from "@/lib/server/payments";
 
 export type AdminActionResult = { ok: true; message: string } | { ok: false; error: string };
 
@@ -36,10 +43,13 @@ function revalidateProperty(propertyId: string) {
   revalidatePath("/admin");
   revalidatePath("/admin/listings");
   revalidatePath("/admin/calendar");
+  revalidatePath("/admin/bookings");
+  revalidatePath("/account");
   if (property) revalidatePath(`/properties/${property.slug}`);
 }
 
 export async function updatePropertyListing(input: unknown): Promise<AdminActionResult> {
+  if (!(await isCurrentUserAdmin())) return { ok: false, error: "Admin access is required." };
   const parsed = listingSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Check the listing details." };
@@ -87,6 +97,7 @@ export async function updatePropertyListing(input: unknown): Promise<AdminAction
 }
 
 export async function createBlockedRange(input: unknown): Promise<AdminActionResult> {
+  if (!(await isCurrentUserAdmin())) return { ok: false, error: "Admin access is required." };
   const parsed = blockSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: "Choose a valid start and end date." };
@@ -107,7 +118,7 @@ export async function createBlockedRange(input: unknown): Promise<AdminActionRes
         tx.booking.findFirst({
           where: {
             propertyId: data.propertyId,
-            status: { in: ["pending", "confirmed"] },
+            status: { in: ["pending", "awaiting_payment", "confirmed"] },
             checkIn: { lt: data.checkOut },
             checkOut: { gt: data.checkIn },
           },
@@ -143,6 +154,7 @@ export async function createBlockedRange(input: unknown): Promise<AdminActionRes
 }
 
 export async function removeBlockedRange(id: string): Promise<AdminActionResult> {
+  if (!(await isCurrentUserAdmin())) return { ok: false, error: "Admin access is required." };
   if (!id) return { ok: false, error: "Missing blocked range." };
 
   try {
@@ -152,4 +164,86 @@ export async function removeBlockedRange(id: string): Promise<AdminActionResult>
   } catch {
     return { ok: false, error: "The blocked range could not be removed." };
   }
+}
+
+async function deliverPaymentEmail(bookingId: string, idempotencyKey: string): Promise<AdminActionResult> {
+  const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+  if (!booking || !booking.paymentUrl || !booking.totalAmountCents) {
+    return { ok: false, error: "This booking does not have an active payment link." };
+  }
+  const property = await getManagedPropertyById(booking.propertyId);
+  if (!property) return { ok: false, error: "The booking property could not be found." };
+
+  try {
+    await sendPaymentRequestEmail({
+      booking,
+      property,
+      paymentUrl: booking.paymentUrl,
+      totalAmountCents: booking.totalAmountCents,
+      idempotencyKey,
+    });
+    await prisma.booking.update({
+      where: { id: booking.id },
+      data: { paymentEmailSentAt: new Date() },
+    });
+    revalidateProperty(booking.propertyId);
+    return { ok: true, message: `Payment email sent to ${booking.guestEmail}.` };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Email delivery failed.";
+    return { ok: false, error: `The booking was accepted, but the email was not sent. ${message}` };
+  }
+}
+
+export async function acceptBooking(bookingId: string): Promise<AdminActionResult> {
+  if (!(await isCurrentUserAdmin())) return { ok: false, error: "Admin access is required." };
+
+  const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+  if (!booking) return { ok: false, error: "Booking not found." };
+  if (booking.status === "confirmed") return { ok: false, error: "This booking is already confirmed." };
+  if (booking.status === "cancelled") return { ok: false, error: "A cancelled booking cannot be accepted." };
+
+  if (booking.status === "awaiting_payment" && booking.paymentUrl) {
+    return deliverPaymentEmail(booking.id, `booking-payment-resend-${booking.id}-${Date.now()}`);
+  }
+  if (booking.status !== "pending") {
+    return { ok: false, error: "Only pending bookings can be accepted." };
+  }
+
+  const property = await getManagedPropertyById(booking.propertyId);
+  if (!property) return { ok: false, error: "The booking property could not be found." };
+  const nights = getNights({ checkIn: booking.checkIn, checkOut: booking.checkOut });
+  const totalAmountCents = Math.round(nights * property.pricePerNight * 100);
+  if (!Number.isFinite(totalAmountCents) || totalAmountCents < 50) {
+    return { ok: false, error: "The booking total could not be calculated." };
+  }
+
+  try {
+    const session = await createBookingCheckoutSession({ booking, property, totalAmountCents });
+    if (!session.url) return { ok: false, error: "Stripe did not return a payment link." };
+
+    await prisma.booking.update({
+      where: { id: booking.id },
+      data: {
+        status: "awaiting_payment",
+        paymentStatus: "pending",
+        totalAmountCents,
+        stripeCheckoutSessionId: session.id,
+        paymentUrl: session.url,
+        acceptedAt: new Date(),
+      },
+    });
+    revalidateProperty(booking.propertyId);
+    return deliverPaymentEmail(booking.id, `booking-payment-${booking.id}-${session.id}`);
+  } catch (error) {
+    const message =
+      error instanceof IntegrationConfigurationError || error instanceof Error
+        ? error.message
+        : "The payment request could not be created.";
+    return { ok: false, error: message };
+  }
+}
+
+export async function resendPaymentEmail(bookingId: string): Promise<AdminActionResult> {
+  if (!(await isCurrentUserAdmin())) return { ok: false, error: "Admin access is required." };
+  return deliverPaymentEmail(bookingId, `booking-payment-resend-${bookingId}-${Date.now()}`);
 }

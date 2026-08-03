@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import type { DateRangeIso } from "@/lib/types/booking";
 import { getNights, isValidDateOrder, rangeOverlapsAny } from "@/lib/domain/dateRange";
 import { createBooking } from "@/app/actions/booking";
+import DateRangeCalendar from "@/components/ui/DateRangeCalendar";
 
 type PropertyBookingSidebarProps = {
   propertyId: string;
@@ -11,6 +12,8 @@ type PropertyBookingSidebarProps = {
   pricePerNight: number;
   maxGuests: number;
   occupiedRanges: DateRangeIso[];
+  initialGuestName?: string;
+  initialGuestEmail?: string;
 };
 
 function formatLocalYmd(d: Date): string {
@@ -38,13 +41,15 @@ export default function PropertyBookingSidebar({
   pricePerNight,
   maxGuests,
   occupiedRanges,
+  initialGuestName = "",
+  initialGuestEmail = "",
 }: PropertyBookingSidebarProps) {
   const todayYmd = useMemo(() => formatLocalYmd(new Date()), []);
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [guests, setGuests] = useState(1);
-  const [guestName, setGuestName] = useState("");
-  const [guestEmail, setGuestEmail] = useState("");
+  const [guestName, setGuestName] = useState(initialGuestName);
+  const [guestEmail, setGuestEmail] = useState(initialGuestEmail);
   const [message, setMessage] = useState("");
   const [agreedToHouseRules, setAgreedToHouseRules] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -134,8 +139,8 @@ export default function PropertyBookingSidebar({
             setCheckIn("");
             setCheckOut("");
             setGuests(1);
-            setGuestName("");
-            setGuestEmail("");
+            setGuestName(initialGuestName);
+            setGuestEmail(initialGuestEmail);
             setMessage("");
             setAgreedToHouseRules(false);
           }}
@@ -171,35 +176,17 @@ export default function PropertyBookingSidebar({
           )}
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block text-sm text-neutral-700">
-            Check-in
-            <input
-              type="date"
-              min={todayYmd}
-              value={checkIn}
-              onChange={(e) => {
-                setCheckIn(e.target.value);
-                if (checkOut && e.target.value && checkOut <= e.target.value) {
-                  setCheckOut("");
-                }
-              }}
-              className="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2 text-neutral-950"
-              required
-            />
-          </label>
-          <label className="block text-sm text-neutral-700">
-            Check-out
-            <input
-              type="date"
-              min={checkIn ? formatLocalYmd(new Date(new Date(`${checkIn}T12:00:00`).getTime() + 86_400_000)) : todayYmd}
-              value={checkOut}
-              onChange={(e) => setCheckOut(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2 text-neutral-950"
-              required
-            />
-          </label>
-        </div>
+        <DateRangeCalendar
+          checkIn={checkIn}
+          checkOut={checkOut}
+          disabledRanges={occupiedRanges}
+          minDate={todayYmd}
+          onChange={(next) => {
+            setCheckIn(next.checkIn);
+            setCheckOut(next.checkOut);
+            setFormError(null);
+          }}
+        />
 
         <label className="block text-sm text-neutral-700">
           Guests

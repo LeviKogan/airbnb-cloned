@@ -16,7 +16,7 @@ export default async function AdminOverviewPage() {
     getAdminBookings(),
     getAdminBlockedRanges(),
   ]);
-  const activeBookings = bookings.filter((booking) => booking.status === "pending" || booking.status === "confirmed");
+  const activeBookings = bookings.filter((booking) => ["pending", "awaiting_payment", "confirmed"].includes(booking.status));
   const upcomingBookings = activeBookings
     .filter((booking) => booking.checkOut >= new Date().toISOString().slice(0, 10))
     .slice(0, 5);
@@ -68,7 +68,7 @@ export default async function AdminOverviewPage() {
               <h2 className="text-lg font-semibold">Upcoming bookings</h2>
               <p className="mt-1 text-sm text-[#7a8581]">The next arrivals across your properties</p>
             </div>
-            <Link href="/admin/calendar" className="text-sm font-semibold text-[#365f55]">View calendar</Link>
+            <Link href="/admin/bookings" className="text-sm font-semibold text-[#365f55]">Manage bookings</Link>
           </div>
           {upcomingBookings.length ? (
             <div className="divide-y divide-[#eceee8]">
@@ -87,7 +87,13 @@ export default async function AdminOverviewPage() {
                     </div>
                     <div className="pl-13 sm:pl-0 sm:text-right">
                       <p className="text-sm font-medium">{formatShortDate(booking.checkIn)} – {formatShortDate(booking.checkOut)}</p>
-                      <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${booking.status === "confirmed" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+                      <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                        booking.status === "confirmed"
+                          ? "bg-emerald-50 text-emerald-700"
+                          : booking.status === "awaiting_payment"
+                            ? "bg-blue-50 text-blue-700"
+                            : "bg-amber-50 text-amber-700"
+                      }`}>
                         {booking.status}
                       </span>
                     </div>

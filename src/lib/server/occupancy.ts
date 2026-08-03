@@ -2,7 +2,7 @@ import type { DateRangeIso } from "@/lib/types/booking";
 import { prisma } from "@/lib/db/prisma";
 
 function activeDbStatuses(): string[] {
-  return ["pending", "confirmed"];
+  return ["pending", "awaiting_payment", "confirmed"];
 }
 
 export async function getOccupiedRangesForProperty(propertyId: string): Promise<DateRangeIso[]> {

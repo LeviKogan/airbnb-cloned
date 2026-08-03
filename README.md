@@ -1,6 +1,6 @@
 # Stay Victoria (airbnb-cloned)
 
-Next.js 16 app for browsing boutique stays and submitting **direct booking requests**. Listings are static data; bookings persist to **SQLite** via Prisma.
+Next.js 16 property-booking platform with customer accounts, host administration, selectable availability calendars, Stripe payments, and transactional email.
 
 ## Setup
 
@@ -16,19 +16,23 @@ npm install
 cp .env.example .env
 ```
 
-3. Apply database migrations:
+3. Configure Google, Stripe, and Resend using [docs/integrations.md](docs/integrations.md).
+
+4. Apply database migrations:
 
 ```bash
-npx prisma migrate dev
+npx prisma migrate deploy
 ```
 
-4. Start the dev server:
+5. Start the dev server:
 
 ```bash
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+The host workspace is at `/admin`; customer accounts are at `/account`.
 
 ## Scripts
 
@@ -46,6 +50,8 @@ Open [http://localhost:3000](http://localhost:3000).
 - [docs/adr/](docs/adr/) — architecture decision records
 - [docs/features/](docs/features/) — acceptance criteria per feature slice
 
+Additional provider setup: [docs/integrations.md](docs/integrations.md).
+
 ## Stack
 
-Next.js (App Router), React 19, Tailwind CSS 4, TypeScript, Prisma + SQLite, Zod.
+Next.js (App Router), React 19, Tailwind CSS 4, TypeScript, Auth.js, Stripe, Prisma + SQLite, and Zod.

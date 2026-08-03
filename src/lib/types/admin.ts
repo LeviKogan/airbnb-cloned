@@ -8,7 +8,16 @@ export type AdminBooking = {
   guestEmail: string;
   status: string;
   message: string | null;
+  userId: string | null;
+  totalAmountCents: number | null;
+  currency: string;
+  paymentStatus: string;
+  paymentUrl: string | null;
+  acceptedAt: string | null;
+  paymentEmailSentAt: string | null;
+  paidAt: string | null;
   createdAt: string;
+  updatedAt: string;
 };
 
 export type AdminBlockedRange = {

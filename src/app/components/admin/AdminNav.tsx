@@ -5,9 +5,11 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 
 const links = [
-  { href: "/admin", label: "Overview", icon: "⌂" },
-  { href: "/admin/listings", label: "Listings", icon: "▤" },
-  { href: "/admin/calendar", label: "Calendar", icon: "□" },
+  { href: "/admin", label: "Overview", icon: "O" },
+  { href: "/admin/bookings", label: "Bookings", icon: "B" },
+  { href: "/admin/calendar", label: "Calendar", icon: "C" },
+  { href: "/admin/listings", label: "Listings", icon: "L" },
+  { href: "/admin/accounts", label: "Accounts", icon: "A" },
 ];
 
 export default function AdminNav({ variant }: { variant: "sidebar" | "mobile" }) {
@@ -18,7 +20,7 @@ export default function AdminNav({ variant }: { variant: "sidebar" | "mobile" })
       aria-label="Admin navigation"
       className={cn(
         variant === "sidebar" && "mt-10 space-y-1",
-        variant === "mobile" && "mt-3 flex gap-1 overflow-x-auto pb-1",
+        variant === "mobile" && "scrollbar-none mt-3 flex gap-1 overflow-x-auto pb-1",
       )}
     >
       {links.map((link) => {
@@ -33,7 +35,7 @@ export default function AdminNav({ variant }: { variant: "sidebar" | "mobile" })
               variant === "mobile" && (active ? "bg-[#173a33] text-white" : "whitespace-nowrap text-[#597068]"),
             )}
           >
-            <span aria-hidden className={cn("text-base", active && variant === "sidebar" && "text-[#173a33]")}>
+            <span aria-hidden className="grid size-6 place-items-center rounded-lg border border-current/20 text-[10px] font-bold">
               {link.icon}
             </span>
             {link.label}

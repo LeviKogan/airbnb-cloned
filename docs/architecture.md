@@ -47,6 +47,15 @@ If the database query throws (for example, missing `DATABASE_URL` or corrupt fil
 
 The `/admin` route contains a responsive overview, listing editor, and per-property calendar. Mutations use Server Actions with Zod validation and call `revalidatePath` for both admin and guest routes. Blocking and booking creation repeat overlap checks inside Prisma transactions so an admin block cannot silently conflict with a guest reservation.
 
+## Identity and payment lifecycle
+
+- Auth.js persists Google OAuth users, accounts, and database sessions through the Prisma adapter.
+- `ADMIN_EMAILS` grants host access; admin pages, data-access functions, and every admin Server Action verify authorization independently.
+- A new request starts as `pending`.
+- Admin acceptance calculates the total from server-side listing data, creates a Stripe Checkout Session, changes the request to `awaiting_payment`, and sends the URL through Resend.
+- `/api/stripe/webhook` verifies Stripe's signature and changes the booking to `confirmed` only when the matching Checkout Session reports a paid payment status.
+- Google sign-in links historical bookings whose guest email matches the account email, allowing `/account` to show booking and payment state.
+
 ## Folder conventions
 
 | Area | Location |

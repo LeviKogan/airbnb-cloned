@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Property } from "@/lib/types/property";
 import type { AdminBlockedRange, AdminBooking } from "@/lib/types/admin";
 import { createBlockedRange, removeBlockedRange } from "@/app/actions/admin";
+import DateRangeCalendar from "@/components/ui/DateRangeCalendar";
 
 type CalendarItem =
   | { id: string; kind: "booking"; checkIn: string; checkOut: string; label: string; status: string }
@@ -120,7 +121,7 @@ export default function BookingCalendar({
 
   return (
     <div className="mt-8">
-      <div className="flex gap-2 overflow-x-auto pb-2">
+      <div className="scrollbar-none flex gap-2 overflow-x-auto pb-2">
         {properties.map((property) => (
           <button
             type="button"
@@ -193,13 +194,18 @@ export default function BookingCalendar({
                 <p className="text-xs text-[#7b8782]">Instantly hides dates from guests</p>
               </div>
             </div>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 2xl:grid-cols-1">
-              <label className="text-sm font-medium text-[#52645d]">Start date
-                <input required type="date" value={checkIn} onChange={(event) => { setCheckIn(event.target.value); if (checkOut && event.target.value >= checkOut) setCheckOut(""); }} className="mt-1.5 w-full rounded-xl border border-[#dfe3dc] px-3 py-2.5 text-sm" />
-              </label>
-              <label className="text-sm font-medium text-[#52645d]">End date
-                <input required type="date" min={checkIn || undefined} value={checkOut} onChange={(event) => setCheckOut(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#dfe3dc] px-3 py-2.5 text-sm" />
-              </label>
+            <div className="mt-5">
+              <DateRangeCalendar
+                checkIn={checkIn}
+                checkOut={checkOut}
+                minDate={today}
+                disabledRanges={items.map((item) => ({ checkIn: item.checkIn, checkOut: item.checkOut }))}
+                onChange={(range) => {
+                  setCheckIn(range.checkIn);
+                  setCheckOut(range.checkOut);
+                  setFeedback(null);
+                }}
+              />
             </div>
             <label className="mt-3 block text-sm font-medium text-[#52645d]">Reason <span className="font-normal text-[#929a97]">(optional)</span>
               <input value={note} onChange={(event) => setNote(event.target.value)} placeholder="e.g. Owner stay, maintenance" className="mt-1.5 w-full rounded-xl border border-[#dfe3dc] px-3 py-2.5 text-sm" />

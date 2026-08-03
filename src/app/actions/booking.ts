@@ -1,10 +1,12 @@
 "use server";
 
 import { z } from "zod";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db/prisma";
 import { getNights, isValidDateOrder, rangeOverlapsAny } from "@/lib/domain/dateRange";
 import { getManagedPropertyById } from "@/lib/server/properties";
 import { getOccupiedRangesForProperty } from "@/lib/server/occupancy";
+import { auth } from "@/auth";
 
 const bookingSchema = z.object({
   propertyId: z.string().min(1),
@@ -34,6 +36,7 @@ export async function createBooking(input: unknown): Promise<CreateBookingResult
   }
 
   const data = parsed.data;
+  const session = await auth();
   const property = await getManagedPropertyById(data.propertyId);
   if (!property) {
     return { ok: false, error: "This listing is not available." };
@@ -64,7 +67,7 @@ export async function createBooking(input: unknown): Promise<CreateBookingResult
         tx.booking.findFirst({
           where: {
             propertyId: data.propertyId,
-            status: { in: ["pending", "confirmed"] },
+            status: { in: ["pending", "awaiting_payment", "confirmed"] },
             checkIn: { lt: data.checkOut },
             checkOut: { gt: data.checkIn },
           },
@@ -89,7 +92,8 @@ export async function createBooking(input: unknown): Promise<CreateBookingResult
           checkOut: data.checkOut,
           guests: data.guests,
           guestName: data.guestName,
-          guestEmail: data.guestEmail,
+          guestEmail: (session?.user?.email ?? data.guestEmail).toLowerCase(),
+          userId: session?.user?.id,
           message: data.message,
           status: "pending",
         },
@@ -100,6 +104,11 @@ export async function createBooking(input: unknown): Promise<CreateBookingResult
       return { ok: false, error: "Those dates were just booked. Please pick different dates." };
     }
 
+    revalidatePath("/admin");
+    revalidatePath("/admin/bookings");
+    revalidatePath("/admin/calendar");
+    revalidatePath("/account");
+    revalidatePath(`/properties/${property.slug}`);
     return { ok: true, bookingId: booking.id };
   } catch {
     return { ok: false, error: "We could not reach the booking service. Try again shortly." };
