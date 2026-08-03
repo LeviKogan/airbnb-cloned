@@ -19,6 +19,9 @@ export default function Navbar() {
           <Link href="/contact" className="transition hover:text-black">
             Contact
           </Link>
+          <Link href="/account" className="transition hover:text-black">
+            Account
+          </Link>
         </nav>
 
         <Link

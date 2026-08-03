@@ -8,18 +8,30 @@ datasource db {
 }
 
 model Booking {
-  id          String   @id @default(cuid())
-  propertyId  String
-  checkIn     String
-  checkOut    String
-  guests      Int
-  guestName   String
-  guestEmail  String
-  message     String?
-  status      String
-  createdAt   DateTime @default(now())
+  id                      String    @id @default(cuid())
+  propertyId              String
+  userId                  String?
+  checkIn                 String
+  checkOut                String
+  guests                  Int
+  guestName               String
+  guestEmail              String
+  message                 String?
+  status                  String
+  totalAmountCents        Int?
+  currency                String    @default("aud")
+  paymentStatus           String    @default("not_requested")
+  stripeCheckoutSessionId String?   @unique
+  paymentUrl              String?
+  acceptedAt              DateTime?
+  paymentEmailSentAt      DateTime?
+  paidAt                  DateTime?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
 
   @@index([propertyId])
+  @@index([userId])
+  @@index([guestEmail])
 }
 
 model PropertyOverride {
@@ -48,4 +60,54 @@ model BlockedDateRange {
 
   @@index([propertyId])
   @@index([propertyId, checkIn, checkOut])
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  role          String    @default("customer")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
